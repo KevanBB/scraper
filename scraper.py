@@ -10,16 +10,62 @@ import time
 class RecuMeScraper:
     def __init__(self):
         self.base_url = "https://recu.me"
-        self.headers = {
+        self.session = requests.Session()
+        self.session.headers.update({
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-        }
+        })
         self.download_path = "downloads"
         self._create_download_directory()
+        self.is_logged_in = False
 
     def _create_download_directory(self):
         """Create downloads directory if it doesn't exist"""
         if not os.path.exists(self.download_path):
             os.makedirs(self.download_path)
+
+    def login(self, username, password):
+        """
+        Login to recu.me
+        Args:
+            username: Your recu.me username
+            password: Your recu.me password
+        Returns:
+            bool: True if login successful, False otherwise
+        """
+        try:
+            # First get the login page to get any necessary tokens
+            login_url = f"{self.base_url}/account/signin"
+            response = self.session.get(login_url)
+            response.raise_for_status()
+            
+            # Extract CSRF token if present
+            soup = BeautifulSoup(response.text, 'html.parser')
+            csrf_token = None
+            csrf_input = soup.find('input', {'name': 'token'})
+            if csrf_input:
+                csrf_token = csrf_input.get('value')
+
+            # Prepare login data
+            login_data = {
+                'username': username,
+                'password': password,
+                'token': csrf_token
+            }
+
+            # Perform login
+            login_response = self.session.post(login_url, data=login_data)
+            login_response.raise_for_status()
+
+            # Check if login was successful
+            if "Invalid username or password" in login_response.text:
+                return False
+
+            self.is_logged_in = True
+            return True
+
+        except Exception as e:
+            print(f"Login error: {str(e)}")
+            return False
 
     def _extract_video_url(self, soup):
         """Extract the video URL from the page"""
@@ -45,7 +91,10 @@ class RecuMeScraper:
 
     def scrape_url(self, url):
         try:
-            response = requests.get(url, headers=self.headers)
+            if not self.is_logged_in:
+                return {'error': 'Not logged in. Please login first using login(username, password)'}
+
+            response = self.session.get(url)
             response.raise_for_status()
             soup = BeautifulSoup(response.text, 'html.parser')
             
@@ -130,6 +179,9 @@ class RecuMeScraper:
             dict: Information about the download result
         """
         try:
+            if not self.is_logged_in:
+                return {'error': 'Not logged in. Please login first using login(username, password)'}
+
             if 'video_url' not in video_info:
                 return {'error': 'No video URL found in video info'}
 
@@ -141,7 +193,7 @@ class RecuMeScraper:
             filepath = os.path.join(self.download_path, filename)
 
             # Download the video
-            response = requests.get(video_info['video_url'], headers=self.headers, stream=True)
+            response = self.session.get(video_info['video_url'], stream=True)
             response.raise_for_status()
             
             # Get total file size

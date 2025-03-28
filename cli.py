@@ -4,6 +4,7 @@ import json
 from datetime import datetime
 import sys
 import time
+import getpass
 
 def print_progress(progress):
     """Print download progress to the terminal"""
@@ -15,11 +16,26 @@ def main():
     parser.add_argument('url', help='URL of the video to scrape')
     parser.add_argument('--download', '-d', action='store_true', help='Download the video after scraping')
     parser.add_argument('--output', '-o', help='Output JSON file for scraped data (default: scraped_data_TIMESTAMP.json)')
+    parser.add_argument('--username', '-u', help='Your recu.me username')
+    parser.add_argument('--password', '-p', help='Your recu.me password (not recommended, will prompt if not provided)')
     args = parser.parse_args()
 
     scraper = RecuMeScraper()
     
-    print(f"Scraping URL: {args.url}")
+    # Handle login
+    if not args.username:
+        args.username = input("Enter your recu.me username: ")
+    
+    if not args.password:
+        args.password = getpass.getpass("Enter your recu.me password: ")
+    
+    print("\nLogging in...")
+    if not scraper.login(args.username, args.password):
+        print("Login failed. Please check your credentials.")
+        sys.exit(1)
+    print("Login successful!")
+    
+    print(f"\nScraping URL: {args.url}")
     video_info = scraper.scrape_url(args.url)
     
     if 'error' in video_info:
