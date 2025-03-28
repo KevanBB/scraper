@@ -1,14 +1,13 @@
 # Recu.me Scraper
 
-A user-friendly GUI application for scraping data from recu.me websites.
+A command-line tool for scraping and downloading videos from recu.me.
 
 ## Features
 
-- Modern, user-friendly interface
-- Easy URL input and data scraping
-- Automatic data saving to JSON files
-- Real-time status updates
-- Error handling and user feedback
+- Scrape video metadata and information
+- Download videos with progress tracking
+- Save scraped data to JSON files
+- Command-line interface for easy use
 
 ## Requirements
 
@@ -17,7 +16,7 @@ A user-friendly GUI application for scraping data from recu.me websites.
 
 ## Installation
 
-1. Clone this repository to your VPS
+1. Clone this repository
 2. Install the required packages:
 ```bash
 pip install -r requirements.txt
@@ -25,20 +24,38 @@ pip install -r requirements.txt
 
 ## Usage
 
-1. Run the GUI application:
+### Basic Usage
+
+To scrape video information without downloading:
 ```bash
-python gui.py
+python cli.py "https://recu.me/[performer]/video/[video_id]/play"
 ```
 
-2. Enter the URL you want to scrape in the input field
-3. Click "Scrape Data" to start the scraping process
-4. The scraped data will be displayed in the text area and saved to a JSON file
+### Download Video
+
+To scrape and download the video:
+```bash
+python cli.py "https://recu.me/[performer]/video/[video_id]/play" --download
+```
+
+### Specify Output File
+
+To save scraped data to a specific JSON file:
+```bash
+python cli.py "https://recu.me/[performer]/video/[video_id]/play" --output "my_data.json"
+```
+
+### All Options
+
+```bash
+python cli.py --help
+```
 
 ## Data Storage
 
-Scraped data is automatically saved to JSON files in the following format:
-- Filename: `scraped_data_YYYYMMDD_HHMMSS.json`
-- Each file contains the scraped data with timestamp and URL information
+- Scraped data is saved to JSON files
+- Downloaded videos are saved in the `downloads` directory
+- Video files are named in the format: `performer_YYYYMMDD.mp4`
 
 ## Note
 
